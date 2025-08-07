@@ -1,4 +1,5 @@
 FROM node:lts-slim
+
 # Configure default locale (important for chrome-headless-shell).
 ENV LANG=de_DE.UTF-8 
 # UID of the non-root user 'pptruser'
@@ -10,43 +11,47 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 # Set the path to the installed Chromium executable
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
-# Install Chromium, necessary dependencies and fonts to support major charsets (Chinese, Japanese, Arabic, Hebrew, Thai and a few others)
+# Install Chromium, necessary dependencies and fonts to support major charsets
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    curl \
-    chromium \
-    chromium-sandbox \
-    fonts-ipafont-gothic \
-    fonts-wqy-zenhei \
-    fonts-thai-tlwg \
-    fonts-khmeros \
-    fonts-kacst \
-    fonts-freefont-ttf \
-    dbus \
-    dbus-x11 \
-    curl \
-    # Additional dependencies that might be needed for Chromium
-    libnss3 \
-    libxss1 \
-    libasound2 \
-    libxtst6 \
-    libgtk-3-0 \
-    libgbm1 \
+       ca-certificates \
+       curl \
+       chromium \
+       chromium-sandbox \
+       fonts-ipafont-gothic \
+       fonts-wqy-zenhei \
+       fonts-thai-tlwg \
+       fonts-khmeros \
+       fonts-kacst \
+       fonts-freefont-ttf \
+       dbus \
+       dbus-x11 \
+       libnss3 \
+       libxss1 \
+       libasound2 \
+       libxtst6 \
+       libgtk-3-0 \
+       libgbm1 \
     && update-ca-certificates \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Add pptruser.
-RUN groupadd -r pptruser && useradd -u $PPTRUSER_UID -rm -g pptruser -G audio,video pptruser
+# Add non-root user 'pptruser'
+RUN groupadd -r pptruser \
+    && useradd -u $PPTRUSER_UID -rm -g pptruser -G audio,video pptruser
 
 USER $PPTRUSER_UID
 WORKDIR /home/pptruser
 
-# Install @puppeteer/browsers, puppeteer and puppeteer-core from npm registry
-# The PUPPETEER_SKIP_CHROMIUM_DOWNLOAD env var will prevent Puppeteer from downloading Chromium
-RUN npm install -g puppeteer puppeteer-core @puppeteer/browsers \
-  && ln -s /usr/local/lib/node_modules/puppeteer /usr/local/lib/node_modules/puppeteer-core node_modules/puppeteer
+# Configure a per-user global npm prefix so we can install -g without root,
+# and ensure Node finds the modules via NODE_PATH.
+ENV NPM_CONFIG_PREFIX=/home/pptruser/.npm-global
+ENV PATH=$NPM_CONFIG_PREFIX/bin:$PATH
+ENV NODE_PATH=$NPM_CONFIG_PREFIX/lib/node_modules
+
+# Create prefix dir & install Puppeteer packages globally into it
+RUN mkdir -p $NPM_CONFIG_PREFIX/lib/node_modules \
+    && npm install -g puppeteer puppeteer-core @puppeteer/browsers --no-save
 
 # Generate THIRD_PARTY_NOTICES using chrome --credits.
 RUN chromium --headless --disable-gpu --credits > THIRD_PARTY_NOTICES 2>/dev/null || true
