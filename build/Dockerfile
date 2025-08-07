@@ -45,8 +45,8 @@ WORKDIR /home/pptruser
 
 # Install @puppeteer/browsers, puppeteer and puppeteer-core from npm registry
 # The PUPPETEER_SKIP_CHROMIUM_DOWNLOAD env var will prevent Puppeteer from downloading Chromium
-RUN npm install @puppeteer/browsers puppeteer puppeteer-core --no-save \
-    && npm cache clean --force
+RUN npm install -g puppeteer puppeteer-core @puppeteer/browsers \
+  && ln -s /usr/local/lib/node_modules/puppeteer /usr/local/lib/node_modules/puppeteer-core node_modules/puppeteer
 
 # Generate THIRD_PARTY_NOTICES using chrome --credits.
 RUN chromium --headless --disable-gpu --credits > THIRD_PARTY_NOTICES 2>/dev/null || true
