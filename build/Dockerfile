@@ -13,6 +13,8 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 # Install Chromium, necessary dependencies and fonts to support major charsets (Chinese, Japanese, Arabic, Hebrew, Thai and a few others)
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
     chromium \
     chromium-sandbox \
     fonts-ipafont-gothic \
@@ -30,6 +32,7 @@ RUN apt-get update \
     libxtst6 \
     libgtk-3-0 \
     libgbm1 \
+    && update-ca-certificates \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
