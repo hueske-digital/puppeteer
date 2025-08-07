@@ -23,6 +23,7 @@ RUN apt-get update \
     fonts-freefont-ttf \
     dbus \
     dbus-x11 \
+    curl \
     # Additional dependencies that might be needed for Chromium
     libnss3 \
     libxss1 \
